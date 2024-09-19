@@ -69,7 +69,6 @@ NEW_BLOCK='paths:
     rpiCameraHFlip: true
     rpiCameraBitrate: 1500000'
 
-# Используем sed для удаления старого блока и вставки нового
 sed -i '/^paths:/,/all_others:/d' ${MEDIAMTX_DIR}/mediamtx.yml
 echo "$NEW_BLOCK" >> ${MEDIAMTX_DIR}/mediamtx.yml
 
