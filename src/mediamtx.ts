@@ -1,8 +1,13 @@
 import {baseDriverModule} from '../core/base-driver-module';
 import {inspect} from 'util';
+import {spawn} from "child_process";
 
 
 class Mediamtx extends baseDriverModule {
+  mediaMtxDir= "/srv/mediamtx";
+  mediaMtxVersion= "1.9.1";
+  mediaMtxBaseUrl= "https://github.com/bluenviron/mediamtx/releases/download";
+
   initDeviceEx(resolve, reject) {
     super.initDeviceEx(() => {
       resolve({});
@@ -19,11 +24,8 @@ class Mediamtx extends baseDriverModule {
       arch2 = 'amd64'
     }
 
-    const mediaMtxDir= "/srv/mediamtx"
-    const mediaMtxVersion= "1.9.1"
-    const mediaMtxBaseUrl= "https://github.com/bluenviron/mediamtx/releases/download"
-    const mediaMtxFile=`mediamtx_v${mediaMtxVersion}_${platform}_${arch2}.tar.gz`
-    const mediaMtxFileUrl= `${mediaMtxBaseUrl}/v${mediaMtxVersion}/${mediaMtxFile}`
+    const mediaMtxFile=`mediamtx_v${this.mediaMtxVersion}_${platform}_${arch2}.tar.gz`
+    const mediaMtxFileUrl= `${this.mediaMtxBaseUrl}/v${this.mediaMtxVersion}/${mediaMtxFile}`
 
     if (this.logging) {
       this.log('install-try, platform: ', platform, ', arch: ', arch);
@@ -34,11 +36,11 @@ class Mediamtx extends baseDriverModule {
     const http = require('follow-redirects').https;
     const fs = require('fs');
 
-    fs.mkdirSync(mediaMtxDir, { recursive: true });
+    fs.mkdirSync(this.mediaMtxDir, { recursive: true });
 
     let that = this;
 
-    const file = fs.createWriteStream(`${mediaMtxDir}/${mediaMtxFile}`);
+    const file = fs.createWriteStream(`${this.mediaMtxDir}/${mediaMtxFile}`);
     const request = http.get(mediaMtxFileUrl, function(response) {
       response.pipe(file);
       file.on("finish", () => {
@@ -50,8 +52,8 @@ class Mediamtx extends baseDriverModule {
         const tar = require('tar');
         tar.x({
           gzip: true,
-          C: `${mediaMtxDir}/`,
-          file: `${mediaMtxDir}/${mediaMtxFile}`,
+          C: `${that.mediaMtxDir}/`,
+          file: `${that.mediaMtxDir}/${mediaMtxFile}`,
           sync: true
         });
 
@@ -59,15 +61,58 @@ class Mediamtx extends baseDriverModule {
           that.log('MediaMtx decompressed');
         }
 
-        fs.unlink(`${mediaMtxDir}/${mediaMtxFile}`, (err) => {
+        fs.unlink(`${that.mediaMtxDir}/${mediaMtxFile}`, (err) => {
           if (err) throw err;
 
           if (that.logging) {
             that.log('MediaMtx archive was deleted');
           }
+
+          that.run();
         });
       });
     });
+  }
+
+  createService(): void {
+    const mustache = require('mustache');
+    const fs = require('fs');
+
+    const template = fs.readFileSync('config/mediamtx.service', 'utf8');
+    const output = mustache.render(template, {
+      MediaMtxDir: this.mediaMtxDir
+    });
+
+    fs.writeFileSync('/etc/systemd/system/mediamtx.service', output, 'utf8');
+
+    const { spawn } = require('child_process');
+    spawn('systemctl daemon-reload');
+    spawn('systemctl start mediamtx');
+    spawn('systemctl enable mediamtx.service');
+  }
+
+  run(): void {
+    const fs = require('fs');
+    fs.copyFile(
+        "config/mediamtx.yml",
+        `${this.mediaMtxDir}/mediamtx.yml`,
+        (err) => {}
+    );
+
+    const mediaMtxCmd = `${this.mediaMtxDir}/mediamtx ${this.mediaMtxDir}/mediamtx.yml`
+    if (this.logging) {
+      this.log('MediaMtx command: ', mediaMtxCmd);
+    }
+
+    const { spawn } = require('child_process');
+    const mediamtx = spawn(
+        `${this.mediaMtxDir}/mediamtx`,
+        [`${this.mediaMtxDir}/mediamtx.yml`]
+    );
+
+    if (this.logging) {
+      this.log('MediaMtx was started');
+    }
   }
 }
 
@@ -76,8 +121,8 @@ process.on('uncaughtException', (err) => {
 });
 
 const app = new Mediamtx();
-// app.logging = true;
-// app.install();
+app.logging = true;
+app.install();
 // app.initDevice({
 //   params: {}
 // }).then(() => {

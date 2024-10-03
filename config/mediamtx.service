@@ -1,0 +1,13 @@
+[Unit]
+Wants=network.target
+
+[Service]
+ExecStart={{{MediaMtxDir}}}/mediamtx {{{MediaMtxDir}}}/mediamtx.yml
+WorkingDirectory={{{MediaMtxDir}}}
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
