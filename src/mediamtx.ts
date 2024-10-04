@@ -1,12 +1,34 @@
 import {baseDriverModule} from '../core/base-driver-module';
 import {inspect} from 'util';
-import {spawn} from "child_process";
 
 
 class Mediamtx extends baseDriverModule {
   mediaMtxDir= "/srv/mediamtx";
   mediaMtxVersion= "1.9.1";
   mediaMtxBaseUrl= "https://github.com/bluenviron/mediamtx/releases/download";
+
+  params = {
+    type: 'rtsp', // rtsp or rpi
+    source: 'rtsp://192.168.1.20/ch0_0.h264',
+    width: 1280,
+    height: 720,
+  }
+
+  get type() {
+    return this.params.type;
+  }
+
+  get source() {
+    return this.params.source;
+  }
+
+  get width() {
+    return this.params.width;
+  }
+
+  get height() {
+    return this.params.height;
+  }
 
   initDeviceEx(resolve, reject) {
     super.initDeviceEx(() => {
@@ -68,10 +90,44 @@ class Mediamtx extends baseDriverModule {
             that.log('MediaMtx archive was deleted');
           }
 
+          that.createConfig();
           that.run();
         });
       });
     });
+  }
+
+  createConfig(): void {
+    const mustache = require('mustache');
+    const fs = require('fs');
+
+    const template = fs.readFileSync('config/mediamtx.yml', 'utf8');
+    const output = mustache.render(template, this.getConfigParams());
+
+    fs.unlink(`${this.mediaMtxDir}/mediamtx.yml`, (err) => {
+      fs.writeFileSync(`${this.mediaMtxDir}/mediamtx.yml`, output, 'utf8');
+    });
+
+    if (this.logging) {
+      this.log('MediaMtx config was created');
+    }
+  }
+
+  getConfigParams() {
+    let params = {
+      type: this.type,
+      source: this.source,
+      width: this.width,
+      height: this.height,
+      rpiCamera: false,
+    }
+
+    if (this.type == 'rpi') {
+      params.source = 'rpiCamera';
+      params.rpiCamera = true;
+    }
+
+    return params;
   }
 
   createService(): void {

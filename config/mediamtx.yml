@@ -696,10 +696,12 @@ pathDefaults:
 # for example "~^(test1|test2)$" will match both "test1" and "test2",
 # for example "~^prefix" will match all paths that start with "prefix".
 paths:
-  # example:
-  # my_camera:
-  #   source: rtsp://my_camera
-
-  # Settings under path "all_others" are applied to all paths that
-  # do not match another entry.
-  all_others:
+  camera:
+    source: {{{source}}}
+{{#rpiCamera}}
+    rpiCameraWidth: {{{width}}}
+    rpiCameraHeight: {{{height}}}
+    rpiCameraVFlip: true
+    rpiCameraHFlip: true
+    rpiCameraBitrate: 1500000
+{{/rpiCamera}}
