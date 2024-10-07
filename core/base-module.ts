@@ -52,13 +52,14 @@ export const baseModule = toExtendable(class baseModule extends EventEmitter {
       });
     };
 
-    if (config['logging']) {
+    if (this.config && this.config['logging']) {
       // @ts-ignore
       this.logging = true;
     }
-    if (config['host'] && config['host']) {
-      console.log(`Connecting to ${config['host']}:${config['port']}`);
-      this.ipc.connectToNet('app', config['host'], parseInt(config['port']), handle.bind(this));
+
+    if (this.config && this.config['host'] && this.config['port']) {
+      console.log(`Connecting to ${this.config['host']}:${this.config['port']}`);
+      this.ipc.connectToNet('app', this.config['host'], parseInt(this.config['port']), handle.bind(this));
     } else {
       console.log(`Connecting to localhost:8000`);
       this.ipc.connectToNet('app', handle.bind(this));

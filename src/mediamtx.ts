@@ -30,6 +30,10 @@ class Mediamtx extends baseDriverModule {
     return this.params.height;
   }
 
+  get loadConfig() {
+    return true;
+  }
+
   installDeviceEx(resolve, reject) {
     const fs = require('fs');
     const os = require('os');
