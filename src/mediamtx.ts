@@ -31,22 +31,22 @@ class Mediamtx extends baseDriverModule {
   }
 
   installDeviceEx(resolve, reject) {
+    const fs = require('fs');
+    const os = require('os');
+    const platform = os.platform();
+    const arch = os.arch();
+
+    if (
+      fs.existsSync(`${this.mediaMtxDir}/mediamtx`) &&
+      fs.existsSync(`${this.mediaMtxDir}/mediamtx.yml`)
+    ) {
+      this.app.log('MediaMtx already installed');
+
+      this.run();
+      return resolve({});
+    }
+
     super.initDeviceEx(() => {
-      const fs = require('fs');
-
-      if (
-        fs.existsSync(`${this.mediaMtxDir}/mediamtx`) &&
-        fs.existsSync(`${this.mediaMtxDir}/mediamtx.yml`)
-      ) {
-        this.log('MediaMtx already installed');
-
-        this.run();
-        return;
-      }
-
-      const os = require('os');
-      const platform = os.platform();
-      const arch = os.arch();
       let arch2 = arch
 
       if (arch == 'x64') {
@@ -57,7 +57,7 @@ class Mediamtx extends baseDriverModule {
       const mediaMtxFileUrl = `${this.mediaMtxBaseUrl}/v${this.mediaMtxVersion}/${mediaMtxFile}`
 
       if (this.logging) {
-        this.log('install-try, platform: ', platform, ', arch: ', arch);
+        this.log('MediaMtx install, platform: ', platform, ', arch: ', arch);
         this.log('MediaMtx file: ', mediaMtxFile);
         this.log('MediaMtx file url: ', mediaMtxFileUrl);
       }
@@ -212,8 +212,7 @@ process.on('uncaughtException', (err) => {
 });
 
 const app = new Mediamtx();
-app.logging = true;
-
+// app.logging = true;
 // app.initDevice({
 //   params: {}
 // }).then(() => {
@@ -221,7 +220,6 @@ app.logging = true;
 //     app.subDevices({})
 //   })
 // })
-
-app.installDevice({
-  params: {}
-}).then(() => { });
+// app.installDevice({
+//   params: {}
+// }).then(() => { });
