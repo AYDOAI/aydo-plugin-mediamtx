@@ -30,81 +30,84 @@ class Mediamtx extends baseDriverModule {
     return this.params.height;
   }
 
-  initDeviceEx(resolve, reject) {
+  installDeviceEx(resolve, reject) {
     super.initDeviceEx(() => {
+      const fs = require('fs');
+
+      if (
+        fs.existsSync(`${this.mediaMtxDir}/mediamtx`) &&
+        fs.existsSync(`${this.mediaMtxDir}/mediamtx.yml`)
+      ) {
+        this.log('MediaMtx already installed');
+
+        this.run();
+        return;
+      }
+
+      const os = require('os');
+      const platform = os.platform();
+      const arch = os.arch();
+      let arch2 = arch
+
+      if (arch == 'x64') {
+        arch2 = 'amd64'
+      }
+
+      const mediaMtxFile = `mediamtx_v${this.mediaMtxVersion}_${platform}_${arch2}.tar.gz`
+      const mediaMtxFileUrl = `${this.mediaMtxBaseUrl}/v${this.mediaMtxVersion}/${mediaMtxFile}`
+
+      if (this.logging) {
+        this.log('install-try, platform: ', platform, ', arch: ', arch);
+        this.log('MediaMtx file: ', mediaMtxFile);
+        this.log('MediaMtx file url: ', mediaMtxFileUrl);
+      }
+
+      const http = require('follow-redirects').https;
+
+      fs.mkdirSync(this.mediaMtxDir, { recursive: true });
+
+      let that = this;
+
+      const file = fs.createWriteStream(`${this.mediaMtxDir}/${mediaMtxFile}`);
+      const request = http.get(mediaMtxFileUrl, function (response) {
+        response.pipe(file);
+        file.on("finish", () => {
+          file.close();
+          if (that.logging) {
+            that.log('Download MediaMtx completed');
+          }
+
+          const tar = require('tar');
+          tar.x({
+            gzip: true,
+            C: `${that.mediaMtxDir}/`,
+            file: `${that.mediaMtxDir}/${mediaMtxFile}`,
+            sync: true
+          });
+
+          if (that.logging) {
+            that.log('MediaMtx decompressed');
+          }
+
+          fs.unlink(`${that.mediaMtxDir}/${mediaMtxFile}`, (err) => {
+            if (err) throw err;
+
+            if (that.logging) {
+              that.log('MediaMtx archive was deleted');
+            }
+
+            that.run();
+          });
+        });
+      });
       resolve({});
     }, reject);
   }
 
-  install(): void {
-    const fs = require('fs');
-
-    if (
-      fs.existsSync(`${this.mediaMtxDir}/mediamtx`) &&
-      fs.existsSync(`${this.mediaMtxDir}/mediamtx.yml`)
-    ) {
-      this.log('MediaMtx already installed');
-
-      this.run();
-      return;
-    }
-
-    const os = require('os');
-    const platform = os.platform();
-    const arch = os.arch();
-    let arch2 = arch
-
-    if (arch == 'x64') {
-      arch2 = 'amd64'
-    }
-
-    const mediaMtxFile=`mediamtx_v${this.mediaMtxVersion}_${platform}_${arch2}.tar.gz`
-    const mediaMtxFileUrl= `${this.mediaMtxBaseUrl}/v${this.mediaMtxVersion}/${mediaMtxFile}`
-
-    if (this.logging) {
-      this.log('install-try, platform: ', platform, ', arch: ', arch);
-      this.log('MediaMtx file: ', mediaMtxFile);
-      this.log('MediaMtx file url: ', mediaMtxFileUrl);
-    }
-
-    const http = require('follow-redirects').https;
-
-    fs.mkdirSync(this.mediaMtxDir, { recursive: true });
-
-    let that = this;
-
-    const file = fs.createWriteStream(`${this.mediaMtxDir}/${mediaMtxFile}`);
-    const request = http.get(mediaMtxFileUrl, function(response) {
-      response.pipe(file);
-      file.on("finish", () => {
-        file.close();
-        if (that.logging) {
-          that.log('Download MediaMtx completed');
-        }
-
-        const tar = require('tar');
-        tar.x({
-          gzip: true,
-          C: `${that.mediaMtxDir}/`,
-          file: `${that.mediaMtxDir}/${mediaMtxFile}`,
-          sync: true
-        });
-
-        if (that.logging) {
-          that.log('MediaMtx decompressed');
-        }
-
-        fs.unlink(`${that.mediaMtxDir}/${mediaMtxFile}`, (err) => {
-          if (err) throw err;
-
-          if (that.logging) {
-            that.log('MediaMtx archive was deleted');
-          }
-
-          that.run();
-        });
-      });
-    });
+  initDeviceEx(resolve, reject) {
+    super.initDeviceEx(() => {
+      resolve({});
+    }, reject);
   }
 
   createConfig(): void {
@@ -210,7 +213,7 @@ process.on('uncaughtException', (err) => {
 
 const app = new Mediamtx();
 app.logging = true;
-app.install();
+
 // app.initDevice({
 //   params: {}
 // }).then(() => {
@@ -218,3 +221,7 @@ app.install();
 //     app.subDevices({})
 //   })
 // })
+
+app.installDevice({
+  params: {}
+}).then(() => { });

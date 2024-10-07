@@ -80,6 +80,10 @@ export const baseDriverModule = toExtendable(class baseDriverModule extends base
 
   updateEvents() {
     this.events.push({
+      name: 'install-device',
+      method: this.installDevice.bind(this)
+    });
+    this.events.push({
       name: 'init-device',
       method: this.initDevice.bind(this)
     });
@@ -145,6 +149,30 @@ export const baseDriverModule = toExtendable(class baseDriverModule extends base
     }
   }
 
+  installDevice(params) {
+    if (this.logging) {
+      this.log('installDevice-try', params);
+    }
+    return new Promise((resolve, reject) => {
+      this.params = params && params.params ? params.params : {};
+      this.environment = params ? params.environment : {};
+      this.cloud = params ? params.cloud : false;
+      this.ident = params ? params.ident : null;
+      this.path = params ? params.path : null;
+      
+      this.installDeviceEx(() => {
+        if (this.logging) {
+          this.log('installDevice-done');
+        }
+        this.ipc.of.app.emit('install-device', { id: params.id });
+        resolve({});
+      }, (error) => {
+        this.ipc.of.app.emit('install-device', { id: params.id, error });
+        reject(error);
+      });
+    });
+  }
+  
   initDevice(params) {
     if (this.logging) {
       this.log('initDevice-try', params);
@@ -231,6 +259,23 @@ export const baseDriverModule = toExtendable(class baseDriverModule extends base
         this.ipc.of.app.emit('device-sub-devices', {id: params.id, error: {message: error.message}});
         reject(error);
       }, params.zones);
+    });
+  }
+
+  installDeviceEx(resolve, reject) {
+    const promises = [];
+    if (this.pluginTemplate && this.pluginTemplate.dependencies) {
+      Object.keys(this.pluginTemplate.dependencies).forEach(key => {
+        if (!this.requireEx.modules[key]) {
+          this.requireEx.modules[key] = { version: this.pluginTemplate.dependencies[key] };
+        }
+        promises.push(this.require(key));
+      });
+    }
+    Promise.all(promises).then((libs) => {
+      resolve(libs);
+    }).catch(error => {
+      reject(error)
     });
   }
 
