@@ -37,6 +37,18 @@ class Mediamtx extends baseDriverModule {
   }
 
   install(): void {
+    const fs = require('fs');
+
+    if (
+      fs.existsSync(`${this.mediaMtxDir}/mediamtx`) &&
+      fs.existsSync(`${this.mediaMtxDir}/mediamtx.yml`)
+    ) {
+      this.log('MediaMtx already installed');
+
+      this.run();
+      return;
+    }
+
     const os = require('os');
     const platform = os.platform();
     const arch = os.arch();
@@ -56,7 +68,6 @@ class Mediamtx extends baseDriverModule {
     }
 
     const http = require('follow-redirects').https;
-    const fs = require('fs');
 
     fs.mkdirSync(this.mediaMtxDir, { recursive: true });
 
@@ -90,7 +101,6 @@ class Mediamtx extends baseDriverModule {
             that.log('MediaMtx archive was deleted');
           }
 
-          that.createConfig();
           that.run();
         });
       });
@@ -147,13 +157,35 @@ class Mediamtx extends baseDriverModule {
     spawn('systemctl enable mediamtx.service');
   }
 
+  checkRun() {
+    let that = this;
+    const ps = require('ps-node');
+
+    ps.lookup({
+      command: `${this.mediaMtxDir}/mediamtx`,
+      psargs: ''
+    }, function (err, resultList) {
+      if (err) {
+        throw new Error(err);
+      }
+
+      resultList.forEach(function (process) {
+        if (process && process.command == `${that.mediaMtxDir}/mediamtx`) {
+          return true;
+        }
+      });
+    });
+
+    return false;
+  }
+
   run(): void {
-    const fs = require('fs');
-    fs.copyFile(
-        "config/mediamtx.yml",
-        `${this.mediaMtxDir}/mediamtx.yml`,
-        (err) => {}
-    );
+    if (this.checkRun() == true) {
+      this.log('MediaMtx already running');
+      return;
+    }
+
+    this.createConfig();
 
     const mediaMtxCmd = `${this.mediaMtxDir}/mediamtx ${this.mediaMtxDir}/mediamtx.yml`
     if (this.logging) {
