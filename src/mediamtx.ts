@@ -41,8 +41,6 @@ class Mediamtx extends baseDriverModule {
       fs.existsSync(`${this.mediaMtxDir}/mediamtx.yml`)
     ) {
       this.app.log('MediaMtx already installed');
-
-      this.run();
       return resolve({});
     }
 
@@ -95,8 +93,6 @@ class Mediamtx extends baseDriverModule {
             if (that.logging) {
               that.log('MediaMtx archive was deleted');
             }
-
-            that.run();
           });
         });
       });
@@ -105,7 +101,29 @@ class Mediamtx extends baseDriverModule {
   }
 
   initDeviceEx(resolve, reject) {
+    if (this.checkRun() == true) {
+      this.log('MediaMtx already running');
+      return resolve({});
+    }
+
     super.initDeviceEx(() => {
+      this.createConfig();
+
+      const mediaMtxCmd = `${this.mediaMtxDir}/mediamtx ${this.mediaMtxDir}/mediamtx.yml`
+      if (this.logging) {
+        this.log('MediaMtx command: ', mediaMtxCmd);
+      }
+
+      const { spawn } = require('child_process');
+      const mediamtx = spawn(
+        `${this.mediaMtxDir}/mediamtx`,
+        [`${this.mediaMtxDir}/mediamtx.yml`]
+      );
+
+      if (this.logging) {
+        this.log('MediaMtx was started');
+      }
+
       resolve({});
     }, reject);
   }
@@ -181,30 +199,6 @@ class Mediamtx extends baseDriverModule {
 
     return false;
   }
-
-  run(): void {
-    if (this.checkRun() == true) {
-      this.log('MediaMtx already running');
-      return;
-    }
-
-    this.createConfig();
-
-    const mediaMtxCmd = `${this.mediaMtxDir}/mediamtx ${this.mediaMtxDir}/mediamtx.yml`
-    if (this.logging) {
-      this.log('MediaMtx command: ', mediaMtxCmd);
-    }
-
-    const { spawn } = require('child_process');
-    const mediamtx = spawn(
-        `${this.mediaMtxDir}/mediamtx`,
-        [`${this.mediaMtxDir}/mediamtx.yml`]
-    );
-
-    if (this.logging) {
-      this.log('MediaMtx was started');
-    }
-  }
 }
 
 process.on('uncaughtException', (err) => {
@@ -213,6 +207,9 @@ process.on('uncaughtException', (err) => {
 
 const app = new Mediamtx();
 // app.logging = true;
+// app.installDevice({
+//   params: {}
+// }).then(() => { });
 // app.initDevice({
 //   params: {}
 // }).then(() => {
@@ -220,6 +217,3 @@ const app = new Mediamtx();
 //     app.subDevices({})
 //   })
 // })
-// app.installDevice({
-//   params: {}
-// }).then(() => { });
