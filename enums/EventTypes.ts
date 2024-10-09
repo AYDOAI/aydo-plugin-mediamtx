@@ -45,6 +45,7 @@ export enum EventTypes {
   DeviceCheckSubDevice = 'device->check-sub-device',
 
   DevicesInit = 'devices->init',
+  DevicesInstall = 'devices->install',
   DevicesFind = 'devices->find',
   DevicesGet = 'devices->get',
   DevicesList = 'devices->list',

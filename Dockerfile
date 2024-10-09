@@ -9,7 +9,7 @@ COPY package*.json ./
 
 RUN apt update
 
-RUN npm install -g nodemon tar
+RUN npm install -g nodemon
 
 # Install app dependencies
 RUN npm install

@@ -7,29 +7,6 @@ class Mediamtx extends baseDriverModule {
   mediaMtxVersion= "1.9.1";
   mediaMtxBaseUrl= "https://github.com/bluenviron/mediamtx/releases/download";
 
-  params = {
-    type: 'rtsp', // rtsp or rpi
-    source: 'rtsp://192.168.1.20/ch0_0.h264',
-    width: 1280,
-    height: 720,
-  }
-
-  get type() {
-    return this.params.type;
-  }
-
-  get source() {
-    return this.params.source;
-  }
-
-  get width() {
-    return this.params.width;
-  }
-
-  get height() {
-    return this.params.height;
-  }
-
   get loadConfig() {
     return true;
   }
@@ -40,7 +17,7 @@ class Mediamtx extends baseDriverModule {
     const platform = os.platform();
     const arch = os.arch();
 
-    if (
+     if (
       fs.existsSync(`${this.mediaMtxDir}/mediamtx`) &&
       fs.existsSync(`${this.mediaMtxDir}/mediamtx.yml`)
     ) {
@@ -48,7 +25,7 @@ class Mediamtx extends baseDriverModule {
       return resolve({});
     }
 
-    super.initDeviceEx(() => {
+    super.installDeviceEx(() => {
       let arch2 = arch
 
       if (arch == 'x64') {
@@ -73,6 +50,7 @@ class Mediamtx extends baseDriverModule {
       const file = fs.createWriteStream(`${this.mediaMtxDir}/${mediaMtxFile}`);
       const request = http.get(mediaMtxFileUrl, function (response) {
         response.pipe(file);
+
         file.on("finish", () => {
           file.close();
           if (that.logging) {
@@ -97,14 +75,27 @@ class Mediamtx extends baseDriverModule {
             if (that.logging) {
               that.log('MediaMtx archive was deleted');
             }
+
+            that.createConfig();
+            resolve({});
           });
         });
       });
-      resolve({});
     }, reject);
   }
 
   initDeviceEx(resolve, reject) {
+    this.log('initDeviceEx-try');
+    const fs = require('fs');
+
+    if (
+      fs.existsSync(`${this.mediaMtxDir}/mediamtx`) === false &&
+      fs.existsSync(`${this.mediaMtxDir}/mediamtx.yml`) === false
+    ) {
+      this.app.log('MediaMtx not installed');
+      return resolve({});
+    }
+
     if (this.checkRun() == true) {
       this.log('MediaMtx already running');
       return resolve({});
@@ -133,14 +124,14 @@ class Mediamtx extends baseDriverModule {
   }
 
   createConfig(): void {
-    const mustache = require('mustache');
+    const yaml = require('js-yaml');
     const fs = require('fs');
-
-    const template = fs.readFileSync('config/mediamtx.yml', 'utf8');
-    const output = mustache.render(template, this.getConfigParams());
+    
+    let config = this.config['mediaMtxSettings'];
+    config['paths'] = this.getConfigParams();
 
     fs.unlink(`${this.mediaMtxDir}/mediamtx.yml`, (err) => {
-      fs.writeFileSync(`${this.mediaMtxDir}/mediamtx.yml`, output, 'utf8');
+      fs.writeFileSync(`${this.mediaMtxDir}/mediamtx.yml`, yaml.dump(config), 'utf8');
     });
 
     if (this.logging) {
@@ -149,19 +140,28 @@ class Mediamtx extends baseDriverModule {
   }
 
   getConfigParams() {
-    let params = {
-      type: this.type,
-      source: this.source,
-      width: this.width,
-      height: this.height,
-      rpiCamera: false,
+    let params = {};
+
+    if (this.config['videoSettings']['type'] == 'rpi') {
+      params = {
+        camera: {
+          source: 'rpiCamera',
+          rpiCameraWidth: this.config['videoSettings']['width'],
+          rpiCameraHeight: this.config['videoSettings']['height'],
+          rpiCameraVFlip: true,
+          rpiCameraHFlip: true,
+          rpiCameraBitrate: 1500000
+        }
+      }
+    } else {
+      params = {
+        camera: {
+          source: this.config['videoSettings']['source']
+        }
+      }
     }
 
-    if (this.type == 'rpi') {
-      params.source = 'rpiCamera';
-      params.rpiCamera = true;
-    }
-
+    this.log('Video Stream Params:', params);
     return params;
   }
 
@@ -169,8 +169,7 @@ class Mediamtx extends baseDriverModule {
     const mustache = require('mustache');
     const fs = require('fs');
 
-    const template = fs.readFileSync('config/mediamtx.service', 'utf8');
-    const output = mustache.render(template, {
+    const output = mustache.render(this.config['serviceFileTemplate'], {
       MediaMtxDir: this.mediaMtxDir
     });
 
@@ -210,14 +209,16 @@ process.on('uncaughtException', (err) => {
 });
 
 const app = new Mediamtx();
-// app.logging = true;
+app.logging = true;
+
 // app.installDevice({
 //   params: {}
-// }).then(() => { });
-// app.initDevice({
-//   params: {}
 // }).then(() => {
-//   app.connect({id: 1}).then(() => {
-//     app.subDevices({})
-//   })
-// })
+//   app.initDevice({
+//     params: {}
+//   }).then(() => { });
+// });
+
+app.initDevice({
+  params: {}
+}).then(() => { });

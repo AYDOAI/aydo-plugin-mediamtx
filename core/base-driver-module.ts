@@ -183,23 +183,19 @@ export const baseDriverModule = toExtendable(class baseDriverModule extends base
       this.cloud = params ? params.cloud : false;
       this.ident = params ? params.ident : null;
       this.path = params ? params.path : null;
-      this.getConfig().then(data => {
-        if (!this.config) {
-          this.config = data;
-        } // data;
-        this.initDeviceEx(() => {
-          if (this.logging) {
-            this.log('initDevice-done');
-          }
-          this.ipc.of.app.emit('init-device', {id: params.id});
-          resolve({});
-        }, (error) => {
-          this.ipc.of.app.emit('init-device', {id: params.id, error});
-          reject(error);
-        });
-      }).catch(error => {
+
+      this.initDeviceEx(() => {
+        if (this.logging) {
+          this.log('initDevice-done');
+        }
+        this.ipc.of.app.emit('init-device', { id: params.id });
+        resolve({});
+      }, (error) => {
+        this.ipc.of.app.emit('init-device', { id: params.id, error });
         reject(error);
       });
+    }).catch(error => {
+      this.log('initDevice-try', 'error', error);
     });
   }
 

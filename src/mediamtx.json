@@ -1,5 +1,5 @@
 {
-  "name": "MediaMTX",
+  "name": "Video Stream",
   "type": 5,
   "icon": "hub",
   "class_name": "mediamtx",
@@ -19,36 +19,6 @@
   "commands": [
     {
       "command": "preview"
-    },
-    {
-      "command": "power"
-    },
-    {
-      "command": "channel"
-    },
-    {
-      "command": "format"
-    },
-    {
-      "command": "up"
-    },
-    {
-      "command": "down"
-    },
-    {
-      "command": "left"
-    },
-    {
-      "command": "right"
-    },
-    {
-      "command": "push_button_1"
-    },
-    {
-      "command": "mode_1"
-    },
-    {
-      "command": "snapshot"
     }
   ],
   "display": [
@@ -63,60 +33,10 @@
   ],
   "settings": [
     {
-      "key": "address",
-      "name": "RTSP Address",
+      "key": "source",
+      "name": "Source",
       "type": "text",
       "required": true
-    },
-    {
-      "key": "username",
-      "name": "User Name",
-      "type": "text",
-      "autocomplete": "new-password"
-    },
-    {
-      "key": "password",
-      "name": "Password",
-      "type": "password",
-      "autocomplete": "new-password"
-    },
-    {
-      "key": "rtsp_transport",
-      "name": "RTSP Transport Type",
-      "type": "select",
-      "items": [
-        {
-          "id": "tcp",
-          "title": "TCP"
-        },
-        {
-          "id": "udp",
-          "title": "UDP"
-        }
-      ],
-      "defaultValue": "tcp"
-    },
-    {
-      "key": "address2",
-      "name": "RTSP Address (Second Channel)",
-      "type": "text"
-    },
-    {
-      "key": "external_api",
-      "name": "External API",
-      "type": "select",
-      "driver_types": [43],
-      "items": []
-    },
-    {
-      "key": "support_ptz",
-      "name": "Support PTZ",
-      "type": "checkbox"
-    },
-    {
-      "key": "always_on",
-      "name": "Always on",
-      "type": "checkbox"
     }
   ]
 }
