@@ -209,13 +209,13 @@ process.on('uncaughtException', (err) => {
 
 const app = new Mediamtx();
 app.logging = true;
-app.installDevice({
-  params: {}
-}).then(() => {
-  app.initDevice({
-    params: {}
-  }).then(() => { });
-});
+// app.installDevice({
+//   params: {}
+// }).then(() => {
+//   app.initDevice({
+//     params: {}
+//   }).then(() => { });
+// });
 // app.initDevice({
 //   params: {}
 // }).then(() => { });
