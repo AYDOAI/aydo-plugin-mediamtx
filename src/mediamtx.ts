@@ -27,7 +27,6 @@ class Mediamtx extends baseDriverModule {
 
     super.installDeviceEx(() => {
       let arch2 = arch
-
       if (arch == 'x64') {
         arch2 = 'amd64'
       }
@@ -127,7 +126,7 @@ class Mediamtx extends baseDriverModule {
     const yaml = require('js-yaml');
     const fs = require('fs');
     
-    let config = this.config['mediaMtxSettings'];
+    let config = this.config['pluginMediaMtx']['configMediaMtx'];
     config['paths'] = this.getConfigParams();
 
     fs.unlink(`${this.mediaMtxDir}/mediamtx.yml`, (err) => {
@@ -142,12 +141,12 @@ class Mediamtx extends baseDriverModule {
   getConfigParams() {
     let params = {};
 
-    if (this.config['videoSettings']['type'] == 'rpi') {
+    if (this.config['pluginMediaMtx']['videoSettings']['type'] == 'rpi') {
       params = {
         camera: {
           source: 'rpiCamera',
-          rpiCameraWidth: this.config['videoSettings']['width'],
-          rpiCameraHeight: this.config['videoSettings']['height'],
+          rpiCameraWidth: this.config['pluginMediaMtx']['videoSettings']['width'],
+          rpiCameraHeight: this.config['pluginMediaMtx']['videoSettings']['height'],
           rpiCameraVFlip: true,
           rpiCameraHFlip: true,
           rpiCameraBitrate: 1500000
@@ -156,7 +155,7 @@ class Mediamtx extends baseDriverModule {
     } else {
       params = {
         camera: {
-          source: this.config['videoSettings']['source']
+          source: this.config['pluginMediaMtx']['videoSettings']['source']
         }
       }
     }
@@ -169,7 +168,7 @@ class Mediamtx extends baseDriverModule {
     const mustache = require('mustache');
     const fs = require('fs');
 
-    const output = mustache.render(this.config['serviceFileTemplate'], {
+    const output = mustache.render(this.config['pluginMediaMtx']['serviceFileTemplate'], {
       MediaMtxDir: this.mediaMtxDir
     });
 
@@ -210,13 +209,13 @@ process.on('uncaughtException', (err) => {
 
 const app = new Mediamtx();
 app.logging = true;
-// app.installDevice({
-//   params: {}
-// }).then(() => {
-//   app.initDevice({
-//     params: {}
-//   }).then(() => { });
-// });
+app.installDevice({
+  params: {}
+}).then(() => {
+  app.initDevice({
+    params: {}
+  }).then(() => { });
+});
 // app.initDevice({
 //   params: {}
 // }).then(() => { });
