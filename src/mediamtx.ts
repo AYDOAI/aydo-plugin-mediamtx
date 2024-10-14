@@ -139,23 +139,30 @@ class Mediamtx extends baseDriverModule {
   }
 
   getConfigParams() {
-    let params = {};
+    if (this.logging) {
+      this.log('Params for config: ', this.params);
+    }
 
-    if (this.config['pluginMediaMtx']['videoSettings']['type'] == 'rpi') {
+    let params = {};
+    let resolution = this.config['pluginMediaMtx']['videoResolutions'][this.params['resolution']];
+
+    if (this.params['type'] == 'rpi') {
       params = {
         camera: {
           source: 'rpiCamera',
-          rpiCameraWidth: this.config['pluginMediaMtx']['videoSettings']['width'],
-          rpiCameraHeight: this.config['pluginMediaMtx']['videoSettings']['height'],
+          rpiCameraWidth: resolution['width'],
+          rpiCameraHeight: resolution['height'],
           rpiCameraVFlip: true,
           rpiCameraHFlip: true,
           rpiCameraBitrate: 1500000
         }
       }
-    } else {
+    }
+
+    if (this.params['type'] == 'rtsp') {
       params = {
         camera: {
-          source: this.config['pluginMediaMtx']['videoSettings']['source']
+          source: this.params.source
         }
       }
     }

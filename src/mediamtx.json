@@ -33,10 +33,50 @@
   ],
   "settings": [
     {
+      "key": "type",
+      "name": "Type",
+      "type": "select",
+      "items": [
+        {
+          "id": "rpi",
+          "title": "RPi Camera"
+        },
+        {
+          "id": "rtsp",
+          "title": "RTSP Source"
+        }
+      ],
+      "defaultValue": "rpi"
+    },
+    {
       "key": "source",
       "name": "Source",
       "type": "text",
       "required": true
+    },
+    {
+      "key": "resolution",
+      "name": "Video Resolution",
+      "type": "select",
+      "items": [
+        {
+          "id": "720p",
+          "title": "720p"
+        },
+        {
+          "id": "1080p",
+          "title": "1080p"
+        },
+        {
+          "id": "2k",
+          "title": "2k"
+        },
+        {
+          "id": "4k",
+          "title": "4k"
+        }
+      ],
+      "defaultValue": "720p"
     }
   ]
 }

@@ -3,11 +3,23 @@
     "port": "8000",
     "logging": true,
     "pluginMediaMtx": {
-        "videoSettings": {
-            "type": "rtsp",
-            "source": "rtsp://192.168.1.20/ch0_0.h264",
-            "width": 1280,
-            "height": 720
+        "videoResolutions": {
+            "720p": {
+                "width": 1280,
+                "height": 720
+            },
+            "1080p": {
+                "width": 1920,
+                "height": 1080
+            },
+            "2k": {
+                "width": 2560,
+                "height": 1440
+            },
+            "4k": {
+                "width": 3840,
+                "height": 2160
+            }
         },
         "serviceFileTemplate": "[Unit]\nWants=network.target\n\n[Service]\nExecStart={{{MediaMtxDir}}}/mediamtx {{{MediaMtxDir}}}/mediamtx.yml\nWorkingDirectory={{{MediaMtxDir}}}\nStandardOutput=inherit\nStandardError=inherit\nRestart=always\nUser=root\n\n[Install]\nWantedBy=multi-user.target",
         "configMediaMtx": {
