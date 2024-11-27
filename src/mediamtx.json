@@ -77,6 +77,11 @@
         }
       ],
       "defaultValue": "720p"
+    },
+    {
+      "key": "location",
+      "name": "Location",
+      "type": "google-map"
     }
   ]
 }

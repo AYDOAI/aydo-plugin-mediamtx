@@ -35,7 +35,7 @@
             "runOnConnect": "",
             "runOnConnectRestart": false,
             "runOnDisconnect": "",
-            "authMethod": "internal",
+            "authMethod": "http",
             "authInternalUsers": [
                 {
                     "user": "any",
@@ -76,7 +76,7 @@
                     ]
                 }
             ],
-            "authHTTPAddress": "",
+            "authHTTPAddress": "http://aydo-cloud:3000/backend/v2/gateway/device/auth",
             "authHTTPExclude": [
                 {
                     "action": "api"
