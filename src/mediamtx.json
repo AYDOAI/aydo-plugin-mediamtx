@@ -65,8 +65,10 @@
       "key": "source",
       "name": "Source",
       "type": "text",
-      "visibleConditions": {
-        "type": "rtsp"
+      "conditions": {
+        "visible": {
+          "type": "rtsp"
+        }
       },
       "required": true
     },
