@@ -33,6 +33,18 @@
   ],
   "settings": [
     {
+      "key": "external_host",
+      "name": "External host",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "external_port",
+      "name": "External port",
+      "type": "text",
+      "required": true
+    },
+    {
       "key": "type",
       "name": "Type",
       "type": "select",
@@ -46,12 +58,16 @@
           "title": "RTSP Source"
         }
       ],
-      "defaultValue": "rpi"
+      "defaultValue": "rpi",
+      "required": true
     },
     {
       "key": "source",
       "name": "Source",
       "type": "text",
+      "visibleConditions": {
+        "type": "rtsp"
+      },
       "required": true
     },
     {
@@ -76,7 +92,8 @@
           "title": "4k"
         }
       ],
-      "defaultValue": "720p"
+      "defaultValue": "720p", 
+      "required": true
     },
     {
       "key": "location",

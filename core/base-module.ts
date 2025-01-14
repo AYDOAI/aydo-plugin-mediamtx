@@ -6,7 +6,6 @@ const {toExtendable} = require('../lib/foibles');
 const config = {host: '', port: '', logging: ''};
 
 export const baseModule = toExtendable(class baseModule extends EventEmitter {
-
   config;
   ipc;
   requestId = 0;
@@ -15,9 +14,15 @@ export const baseModule = toExtendable(class baseModule extends EventEmitter {
 
   constructor() {
     super();
+    
     if (this.loadConfig) {
-      this.config = eval(`require('${process.cwd()}/config/config')`);
+      if (this.configFile) {
+        this.config = eval(`require('${process.cwd()}${this.configFile}')`);
+      } else {
+        this.config = eval(`require('${process.cwd()}/config/config')`);
+      }
     }
+
     this.requireEx = new RequireEx();
     this.ipc = require('node-ipc');
 
@@ -64,6 +69,10 @@ export const baseModule = toExtendable(class baseModule extends EventEmitter {
       console.log(`Connecting to localhost:8000`);
       this.ipc.connectToNet('app', handle.bind(this));
     }
+  }
+
+  get configFile() {
+    return false;
   }
 
   get loadConfig() {

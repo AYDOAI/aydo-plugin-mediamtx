@@ -48,6 +48,10 @@ export const baseDriverModule = toExtendable(class baseDriverModule extends base
     return false;
   }
 
+  get configFile() {
+    return false;
+  }
+
   get id() {
     return `driver-${process.argv[2]}`;
   }

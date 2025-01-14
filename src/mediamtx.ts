@@ -5,7 +5,11 @@ import {inspect} from 'util';
 class Mediamtx extends baseDriverModule {
   mediaMtxDir= "/srv/mediamtx";
   mediaMtxVersion= "1.9.1";
-  mediaMtxBaseUrl= "https://github.com/bluenviron/mediamtx/releases/download";
+  mediaMtxBaseUrl = "https://github.com/bluenviron/mediamtx/releases/download";
+  
+  get configFile() {
+    return '/config/mediamtx';
+  }
 
   get loadConfig() {
     return true;
@@ -29,6 +33,10 @@ class Mediamtx extends baseDriverModule {
       let arch2 = arch
       if (arch == 'x64') {
         arch2 = 'amd64'
+      }
+
+      if (arch == 'arm64') {
+        arch2 = 'arm64v8'
       }
 
       const mediaMtxFile = `mediamtx_v${this.mediaMtxVersion}_${platform}_${arch2}.tar.gz`
@@ -123,14 +131,25 @@ class Mediamtx extends baseDriverModule {
   }
 
   createConfig(): void {
-    const yaml = require('js-yaml');
+    const YAML = require('yaml')
     const fs = require('fs');
     
     let config = this.config['pluginMediaMtx']['configMediaMtx'];
     config['paths'] = this.getConfigParams();
 
+    let configStr = YAML.stringify(config, {
+      defaultStringType: 'PLAIN',
+    })
+
+    configStr = configStr.replace("encryption: no", "encryption: \"no\"");
+    configStr = configStr.replace("rpiCameraDenoise: off", "rpiCameraDenoise: \"off\"");
+
     fs.unlink(`${this.mediaMtxDir}/mediamtx.yml`, (err) => {
-      fs.writeFileSync(`${this.mediaMtxDir}/mediamtx.yml`, yaml.dump(config), 'utf8');
+      fs.writeFileSync(
+        `${this.mediaMtxDir}/mediamtx.yml`,
+        configStr,
+        'utf8'
+      );
     });
 
     if (this.logging) {
@@ -152,8 +171,8 @@ class Mediamtx extends baseDriverModule {
           source: 'rpiCamera',
           rpiCameraWidth: resolution['width'],
           rpiCameraHeight: resolution['height'],
-          rpiCameraVFlip: true,
-          rpiCameraHFlip: true,
+          rpiCameraVFlip: false,
+          rpiCameraHFlip: false,
           rpiCameraBitrate: 1500000
         }
       }
