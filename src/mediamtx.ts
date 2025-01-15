@@ -6,6 +6,10 @@ class Mediamtx extends baseDriverModule {
   mediaMtxDir= "/srv/mediamtx";
   mediaMtxVersion= "1.9.1";
   mediaMtxBaseUrl = "https://github.com/bluenviron/mediamtx/releases/download";
+
+  rtspUrl: string = null;
+  rtspUsername: string = null;
+  rtspPassword: string = null;
   
   get configFile() {
     return '/config/mediamtx';
@@ -83,7 +87,7 @@ class Mediamtx extends baseDriverModule {
               that.log('MediaMtx archive was deleted');
             }
 
-            that.createConfig();
+            // that.createConfig();
             resolve({});
           });
         });
@@ -126,6 +130,10 @@ class Mediamtx extends baseDriverModule {
         this.log('MediaMtx was started');
       }
 
+      this.rtspUrl = this.getStreamUrl();
+      this.rtspUsername = this.generateRandomString(8);
+      this.rtspPassword = this.generateRandomString(16);
+
       resolve({});
     }, reject);
   }
@@ -136,6 +144,10 @@ class Mediamtx extends baseDriverModule {
     
     let config = this.config['pluginMediaMtx']['configMediaMtx'];
     config['paths'] = this.getConfigParams();
+
+    if (this.ident && !config['authHTTPAddress'].includes(this.ident)) {
+      config['authHTTPAddress'] = config['authHTTPAddress'] + `/${this.ident}/`;
+    }
 
     let configStr = YAML.stringify(config, {
       defaultStringType: 'PLAIN',
@@ -154,6 +166,7 @@ class Mediamtx extends baseDriverModule {
 
     if (this.logging) {
       this.log('MediaMtx config was created');
+      this.log(config);
     }
   }
 
@@ -226,6 +239,74 @@ class Mediamtx extends baseDriverModule {
     });
 
     return false;
+  }
+
+  connectEx(resolve, reject) {
+    const status: any = {connected: true};
+
+    this.capabilities = [];
+    this.capabilities.push({ident: 'url', index: 1, display_name: 'RTSP url'});
+    this.capabilities.push({ident: 'username', index: 2, display_name: 'Username'});
+    this.capabilities.push({ident: 'password', index: 3, display_name: 'Password'});
+
+    this.counter = 0;
+    status.capabilities = this.capabilities;
+    this.publish(this.eventTypeStatus(this.pluginTemplate.class_name, `${this.id}`), status);
+
+    this.getDevices().then(devices => {
+      console.log(devices);
+    });
+
+    setInterval(() => {
+      this.commandEx('status', null, null, null, () => {
+      }, () => {
+      }, null);
+    }, 15000);
+
+    resolve({});
+  }
+
+  commandEx(command, value, params, options, resolve, reject, status) {
+    const between = (min, max) => {
+      return Math.floor(Math.random() * (max - min) + min);
+    }
+    const update = () => {
+      const status: any = {
+        connected: true,
+        url_1: this.rtspUrl,
+        username_2: this.rtspUsername,
+        password_3: this.rtspPassword,
+      };
+      this.publish(this.eventTypeStatus(this.pluginTemplate.class_name, `${this.id}`), status);
+    }
+    switch (command) {
+      case 'status':
+        this.index++;
+        this.counter++;
+        update()
+        resolve({});
+        break;
+      default:
+        this.currentStatus[command] = value;
+        update()
+        resolve({});
+    }
+  }
+
+  getStreamUrl(): string {
+    let result = `rtsp://${this.params['external_host']}:${this.params['external_port']}/camera`;
+
+    return result;
+  }
+
+  generateRandomString(length: number): string {
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
   }
 }
 
