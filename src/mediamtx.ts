@@ -10,6 +10,8 @@ class Mediamtx extends baseDriverModule {
   rtspUrl: string = null;
   rtspUsername: string = null;
   rtspPassword: string = null;
+
+  serviceStatus: string;
   
   get configFile() {
     return '/config/mediamtx';
@@ -245,9 +247,11 @@ class Mediamtx extends baseDriverModule {
     const status: any = {connected: true};
 
     this.capabilities = [];
-    this.capabilities.push({ident: 'url', index: 1, display_name: 'RTSP url'});
-    this.capabilities.push({ident: 'username', index: 2, display_name: 'Username'});
-    this.capabilities.push({ident: 'password', index: 3, display_name: 'Password'});
+
+    this.capabilities.push({ident: 'status', index: 1, display_name: 'Status'});
+    this.capabilities.push({ident: 'url', index: 2, display_name: 'RTSP url'});
+    this.capabilities.push({ident: 'username', index: 3, display_name: 'Username'});
+    this.capabilities.push({ident: 'password', index: 4, display_name: 'Password'});
 
     this.counter = 0;
     status.capabilities = this.capabilities;
@@ -270,15 +274,20 @@ class Mediamtx extends baseDriverModule {
     const between = (min, max) => {
       return Math.floor(Math.random() * (max - min) + min);
     }
+
     const update = () => {
-      const status: any = {
-        connected: true,
-        url_1: this.rtspUrl,
-        username_2: this.rtspUsername,
-        password_3: this.rtspPassword,
-      };
-      this.publish(this.eventTypeStatus(this.pluginTemplate.class_name, `${this.id}`), status);
+      (async () => {
+        const status: any = {
+          connected: true,
+          status_1: await this.getServiceStatus(8554),
+          url_2: this.rtspUrl,
+          username_3: this.rtspUsername,
+          password_4: this.rtspPassword,
+        };
+        this.publish(this.eventTypeStatus(this.pluginTemplate.class_name, `${this.id}`), status);
+      })();
     }
+
     switch (command) {
       case 'status':
         this.index++;
@@ -307,6 +316,36 @@ class Mediamtx extends baseDriverModule {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
+  }
+
+  async getServiceStatus(port, host = '127.0.0.1') {
+    const isInUse = await this.isPortInUse(port, host);
+    return isInUse ? 'Online' : 'Offline';
+  }
+  
+  isPortInUse(port, host) {
+    const net = require('net');
+    return new Promise((resolve) => {
+      const socket = new net.Socket();
+
+      socket.setTimeout(2000);
+
+      socket.on('connect', () => {
+        socket.destroy();
+        resolve(true);
+      });
+
+      socket.on('timeout', () => {
+        socket.destroy(); 
+        resolve(false);
+      });
+
+      socket.on('error', () => {
+        resolve(false);
+      });
+
+      socket.connect(port, host);
+    });
   }
 }
 
