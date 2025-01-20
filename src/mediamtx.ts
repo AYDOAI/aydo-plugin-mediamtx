@@ -143,9 +143,13 @@ class Mediamtx extends baseDriverModule {
   createConfig(): void {
     const YAML = require('yaml')
     const fs = require('fs');
-    
+
     let config = this.config['pluginMediaMtx']['configMediaMtx'];
     config['paths'] = this.getConfigParams();
+
+    if (this.cloud && this.cloud.url) {
+      config['authHTTPAddress'] = this.cloud.url + config['authHTTPAddress'];
+    }
 
     if (this.ident && !config['authHTTPAddress'].includes(this.ident)) {
       config['authHTTPAddress'] = config['authHTTPAddress'] + `/${this.ident}/`;
