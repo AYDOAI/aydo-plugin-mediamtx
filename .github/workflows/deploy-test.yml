@@ -1,4 +1,4 @@
-name: AYDO Client Test Deploy
+name: AYDO Client Test Deploy #trigers test
 
 on:
   push:
