@@ -27,7 +27,7 @@
             "logDestinations": [
                 "file"
             ],
-            "logFile": "/srv/mediamtx/mediamtx.log",
+            "logFile": "./mediamtx.log",
             "readTimeout": "10s",
             "writeTimeout": "10s",
             "writeQueueSize": 512,
