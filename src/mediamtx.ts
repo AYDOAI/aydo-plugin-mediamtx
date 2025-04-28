@@ -1,9 +1,14 @@
 import {baseDriverModule} from '../core/base-driver-module';
 import {inspect} from 'util';
 
+const os = require('os');
+const path = require('path');
+const mediaMtxDir = path.join(os.homedir(), '.aydo', 'mediamtx').replace(/\\/g, '/');
+
+let aydoMediaMtxProcess: any;
 
 class Mediamtx extends baseDriverModule {
-  mediaMtxDir= "/srv/mediamtx";
+  mediaMtxDir = mediaMtxDir;
   mediaMtxVersion= "1.9.1";
   mediaMtxBaseUrl = "https://github.com/bluenviron/mediamtx/releases/download";
 
@@ -14,7 +19,7 @@ class Mediamtx extends baseDriverModule {
   serviceStatus: string;
   
   get configFile() {
-    return '/config/mediamtx';
+    return '/config/mediamtx.config';
   }
 
   get loadConfig() {
@@ -41,7 +46,7 @@ class Mediamtx extends baseDriverModule {
         arch2 = 'amd64'
       }
 
-      if (arch == 'arm64') {
+      if (platform == 'linux' && arch == 'arm64') {
         arch2 = 'arm64v8'
       }
 
@@ -123,7 +128,7 @@ class Mediamtx extends baseDriverModule {
       }
 
       const { spawn } = require('child_process');
-      const mediamtx = spawn(
+      aydoMediaMtxProcess = spawn(
         `${this.mediaMtxDir}/mediamtx`,
         [`${this.mediaMtxDir}/mediamtx.yml`]
       );
@@ -352,6 +357,17 @@ class Mediamtx extends baseDriverModule {
     });
   }
 }
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received. Terminating all processes.');
+
+  aydoMediaMtxProcess.kill('SIGTERM');
+
+  aydoMediaMtxProcess.on('exit', () => {
+    console.log('Mediamtx process terminated. Terminating application.');
+    process.exit(0);
+  });
+});
 
 process.on('uncaughtException', (err) => {
   console.error(`${err ? err.message : inspect(err)}`);
